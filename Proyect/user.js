@@ -5,11 +5,10 @@ class User {
         //esto se utilizará en caso de querer meter un indicador en el centro de la camara this.img = img;
 
         this.position = initialPosition;
+        this.boundingRadius = 0;
         //this.attacking = false;
         this.moving = false;
         this.lastFrameMoving = false;
-        this.running = false;
-        this.lastFrameRunning = false;
         this.goingRight = true;
         this.goingRightModifier = 1;
         this.framesCount = 0;
@@ -18,7 +17,11 @@ class User {
         //stats la mitad no se utilizan por que vienen de reciclar una clase llamada player
         this.speed = 200;
         this.speedMult = 1.5;
-        this.movement = 0;
+        this.movement = {
+            movementX : 0,
+            movementY : 0
+        }
+        
         /*
         this.maxHp = _life;
         this.hp = this.maxHp;
@@ -30,96 +33,43 @@ class User {
 
     Update(deltaTime) {
         this.framesCount++;
-        
-        // attack
-        //#region attack
-        
-        if (Input.IsMousePressed() && Input.mouse.y < 382 &&(this.fireRateAux >= this.fireRate)) {
-            
-        }
 
         // movement
-        this.movement = 0;
+        this.movement.movementX = 0;
+        this.movementY = 0;
 
 
         if (Input.IsKeyPressed(KEY_A) || Input.IsKeyPressed(KEY_LEFT)) {
-            this.movement -= 1;
+            this.movement.movementX -= 1;
             this.goingRight = false;
             this.goingRightModifier = -1;
         }
         if (Input.IsKeyPressed(KEY_D) || Input.IsKeyPressed(KEY_RIGHT)) {
-            this.movement += 1;
+            this.movement.movementX += 1;
             this.goingRight = true;
             this.goingRightModifier = 1;
         }
+        if (Input.IsKeyPressed(KEY_W) || Input.IsKeyPressed(KEY_UP)) {
+            this.movement.movementY -= 1;
+        }
+        if (Input.IsKeyPressed(KEY_S) || Input.IsKeyPressed(KEY_DOWN)) {
+            this.movement.movementY += 1;
+        }
 
 
-        if(this.movement != 0){
+        if(this.movement.movementX != 0){
             this.moving = true;
             
         }
         else{
             this.moving = false;
-            this.running = false;
         }
-        // speed multiply
-        /*
-        if (Input.IsKeyPressed(KEY_LSHIFT)) {
-            if (this.extenuationAux > 1)
-            {
-                this.movement *= this.speedMult;
-
-                if(this.movement != 0){
-                    this.running = true;
-                    if(this.extenuationAux > 0) this.extenuationAux -= 2;
-                    else this.extenuationAux = 0;
-                }
-                else {
-                    this.running = false;
-                    if(this.extenuationAux < this.extenuation) this.extenuationAux += 1;
-                    else this.extenuationAux = this.extenuation;
-                }
-            }
-            else this.running = false;
-        }
-        else {
-            if(this.extenuationAux < this.extenuation) this.extenuationAux += 1;
-            else this.extenuationAux = this.extenuation;
-            this.running = false;
-        }
-        */
-        /*
-        if(!this.attacking){
-            if (!this.lastFrameMoving && !this.moving && this.framesCount > (120 + 120)) {
-                this.framesCount = 0;
-                this.gnocchi = 0;
-            }
-            else if (this.lastFrameMoving != this.moving) {
-                this.framesCount = 0;
-                this.gnocchi = 0;
-            }// empieza o deja de moverse
-            else if (this.lastFrameRunning != this.running) {
-                this.framesCount = 0;
-                this.gnocchi = 0;
-            } //empieza o deja de correr
-            else if (this.lastFrameMoving && this.moving && this.framesCount >= 60) {
-                this.framesCount = 0;
-                this.gnocchi = 0;
-            }//60 duración movingAnim
-            else if (this.lastFrameRunning && this.running && this.framesCount >= 30) {
-                this.framesCount = 0;
-                this.gnocchi = 0;
-            }//60 duración runningAnim
-
-            if (this.framesCount > 120) this.gnocchi++;
-        }
-        */
-
+        
         this.lastFrameMoving = this.moving;
-        this.lastFrameRunning = this.running;
 
         // apply the movement
-        this.position.x += this.movement * this.speed * deltaTime;
+        this.position.x += this.movement.movementX * this.speed * deltaTime;
+        this.position.y += this.movement.movementY * this.speed * deltaTime;
         
 
         

@@ -12,6 +12,12 @@ var globalDT;
 
 var user = null;
 var camera = null;
+var sceneLimits = {
+    x: 0,
+    y: 0,
+    width: 5400,
+    height: 3750
+};
 
 //Assets
 var assets = {
@@ -48,11 +54,23 @@ function LoadImages(assets, onloaded){
     return assets;
 }
 
+function ResizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    if (camera != null) {
+        camera.OnResize();
+    }
+}
+
 // base estructural logic
 
 function Init() {
     canvas = document.getElementById("myCanvas");
     ctx = canvas.getContext("2d");
+
+    ResizeCanvas();
+    window.addEventListener("resize", ResizeCanvas);
 
     // input setup
     SetupKeyboardEvents();
@@ -94,6 +112,17 @@ function Loop() {
     let now = performance.now();
     let deltaTime = (now - time) / 1000;
     globalDT = deltaTime;
+
+    time = now;
+    framesAcum++;
+    acumDelta += deltaTime;
+
+    if (acumDelta >= 1) {
+        fps = framesAcum;
+        framesAcum = 0;
+        acumDelta -= 1;
+    }
+    if (deltaTime > 1) return;
     
     // Update the games logic
     Update(deltaTime);
@@ -114,6 +143,8 @@ function Update(deltaTime) {
     // update the camera
     camera.Update(deltaTime);
 
+    //Limpiar flags de un solo frame
+    Input.PostUpdate();
 }
 
 function Draw() {
