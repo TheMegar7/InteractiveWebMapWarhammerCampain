@@ -12,18 +12,21 @@ var globalDT;
 
 var user = null;
 var camera = null;
+var background = null;
 var sceneLimits = {
     x: 0,
     y: 0,
     width: 5400,
     height: 3750
 };
+var selectedToken = null;
+
 
 //Assets
 var assets = {
     map:{
         img: null,
-        path: "./assets/Map.png"
+        path: "./assets/Map.jpeg"
     },
     mouse:{
         img: null,
@@ -78,6 +81,7 @@ function Init() {
     
     // assets loading
     LoadImages(assets, () => {
+        console.log("Assets cargados o procesados");
         audios.soundtrack = document.getElementById("Soundtrack");
         Start();
         Loop();
@@ -86,24 +90,32 @@ function Init() {
 
 // Start/Turn on logic
 function Start() {
+    console.log("Start ejecutado");
     time = performance.now();
 
     alert("Mapa to guapo, derechos a quien le pertenezcan");
 
-    audios.soundtrack.play();
+    let audioStarted = false;
+
+    function TryStartAudio() {
+        if (audioStarted) return;
+        audioStarted = true;
+        StartAudio();
+    }
+
+    window.addEventListener("pointerdown", TryStartAudio, { once: true });
+    window.addEventListener("keydown", TryStartAudio, { once: true });
+
     
     // initialize the player //Aqui tengo que meter la ubicación de inicio del player y la imagen (?) del player.
     user = new User(new Vector2(canvas.width / 2, canvas.height / 2));
     
     camera = new Camera(user);
+
+    background = new Background(sceneLimits.width, sceneLimits.height, 100);
     
     camera.Start();
 
-    // one enemy //esto tengo que borrarlo
-    //enemy = new Enemy(assets.villagers.img, new Vector2 (3456, 336), 4/*hp*/, wall, player, home);
-    //enemy spawn for the moment
-    //let enemy = new Enemy(assets.malandro.img, new Vector2 (3456, 336), 4/*hp*/, wall, player, home);
-    //enemies.push(enemy);
 }
 
 function Loop() {
@@ -133,11 +145,6 @@ function Loop() {
 
 function Update(deltaTime) {
     
-    // Use to ajust cells
-    //enemies.forEach(enemy => enemy.Update(deltaTime));
-    
-    //background.Update(deltaTime);
-    
     //Update the User
     user.Update(deltaTime);
     // update the camera
@@ -154,25 +161,19 @@ function Draw() {
     ctx.fillStyle = "rgba(0, 0, 100, 1)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    camera.PreDraw(ctx); //De qeui pabajo todo lo que pase en escena //////////////////////////////////////////////////////////
     
-    // grid
-    //background.Draw(ctx);
+    camera.PreDraw(ctx); //De aqui pabajo todo lo que pase en escena //////////////////////////////////////////////////////////
     
-    //NPCS
-    //nanianos.forEach(naniano => naniano.Draw(ctx));
+    background.Draw(ctx);
     
-    // draw the player
-    //User.Draw(ctx);
+    
+    user.Draw(ctx);
 
     camera.PostDraw(ctx); //De aqui parriba todo lo que pase en escena //////////////////////////////////////////////////////////
 
-    //Clock(ctx);
-
-    //Healbar(ctx);
 
     // mouse
-    ctx.drawImage(assets.mouse.img, Input.mouse.x, Input.mouse.y - 16*3);
+    DrawCursor();
 
     // draw the fps
     DrawStats(ctx)
@@ -180,7 +181,7 @@ function Draw() {
 
 function DrawStats(ctx) {
     ctx.textAlign = "start";
-    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillStyle = "rgba(122, 122, 122, 0.5)";
     ctx.fillRect(2, 2, 110, 54);
     ctx.fillStyle = "white";
     ctx.font = "12px Comic Sans MS regular";
@@ -191,38 +192,33 @@ function DrawStats(ctx) {
     ctx.fillText("deltaTime: " + (globalDT).toFixed(4), 6, 50);
 }
 
-function Clock(ctx){
-    ctx.drawImage(assets.clock.img, 1029 - 96/2, 48 -96/2);
-    ctx.fillStyle = "rgba(150, 150, 255, 1)";
-    ctx.beginPath();
-    ctx.arc(1029, 48, 42, Math.PI, - clock.dayAuxTime * Math.PI);
-    ctx.lineTo(1029, 48);
-    ctx.fill();
-    ctx.fillStyle = "rgba(0, 0, 255, 1)";
-    ctx.beginPath();
-    ctx.arc(1029, 48, 42, 0, clock.nightTimeAux * Math.PI);
-    ctx.lineTo(1029, 48);
-    ctx.fill();
-    ctx.drawImage(assets.clockFront.img, 1029 - 96/2, 48 -96/2);
+function DrawCursor() {
+    if (assets.mouse?.img) {
+        ctx.drawImage(assets.mouse.img, Input.mouse.x, Input.mouse.y);
+    }
+    else {
+        ctx.fillStyle = "rgb(255, 0, 0)";
+        ctx.fillRect(Input.mouse.x, Input.mouse.y, 4, 4);
+    }
+
+    /*if (selectedToken && selectedToken.img) {
+        ctx.drawImage(selectedToken.img, Input.mouse.x + 12, Input.mouse.y + 12, 32, 32);
+    }*/
 }
 
-function Healbar(ctx){
-    ctx.drawImage(assets.healbar.img, 0, 4);
-    ctx.fillStyle = "rgba( 0, 255, 0, 1)";
-    ctx.beginPath();
-    ctx.rect(6, 64, 10 * user.hp, 12);
-    ctx.fill();
+function StartAudio() {
+    if (!audios.soundtrack) return;
 
-    ctx.textAlign = "start";
-    ctx.fillStyle = "white";
-    ctx.font = "12px Comic Sans MS regular";
-    ctx.fillText(user.hp, 10 + (10 *user.hp), 74);
+    audios.soundtrack.volume = 0.2;
 
-    ctx.fillStyle = "rgba( 100, 170, 255, 1)";
-    ctx.beginPath();
-    ctx.rect(6, 88, user.extenuationAux/25 * 6, 6);
-    ctx.fill();
+    const playPromise = audios.soundtrack.play();
+    if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+            console.log("Audio bloqueado o no disponible:", error);
+        });
+    }
 }
+
 
 
 window.onload = Init;

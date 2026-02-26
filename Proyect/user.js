@@ -22,13 +22,6 @@ class User {
             movementY : 0
         }
         
-        /*
-        this.maxHp = _life;
-        this.hp = this.maxHp;
-        this.extenuation = 800; //mas o menos 8 segs
-        this.extenuationAux = 1000;
-        */
-        
     }
 
     Update(deltaTime) {
@@ -36,7 +29,7 @@ class User {
 
         // movement
         this.movement.movementX = 0;
-        this.movementY = 0;
+        this.movement.movementY = 0;
 
 
         if (Input.IsKeyPressed(KEY_A) || Input.IsKeyPressed(KEY_LEFT)) {
@@ -85,49 +78,24 @@ class User {
     }
 
     Draw(ctx) {
-        let animFrame = Math.trunc(this.framesCount/10);
-        let gnocchiFrame = Math.trunc(this.gnocchi/10);
-        let fastFrame = Math.trunc(this.framesCount/5);
 
         ctx.save();
 
-        ctx.translate(this.position.x, this.position.y);
-        ctx.scale(this.goingRightModifier, 1);
-
-        /*
-        if(this.attacking){
-            //Column 4
-            ctx.drawImage(this.img, 96 * 4, 96*fastFrame, 192, 96, -46, -96, 192 , 96);
-        }
-        else if(this.running){
-            //Column 2
-            ctx.drawImage(this.img, 96 * 2, 96*fastFrame, 96, 96, -46, -96, 96 , 96);
-        }
-        else if (this.moving){
-            //Column 1
-            ctx.drawImage(this.img, 96 * 1, 96*animFrame, 96, 96, -46, -96, 96 , 96);
-        }
-        else if(this.framesCount >= 120){
-            //Column 0
-            ctx.drawImage(this.img, 96 * 0, 96 * gnocchiFrame, 96, 96, -46, -96, 96 , 96);
-        }
-        // Column 0
-        else ctx.drawImage(this.img, 96 * 0, 0, 96, 96, -46, -96, 96 , 96);
-        */
-
-        ctx.restore();
-
-        /*ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
+        ctx.fillStyle = "crimson";
         ctx.beginPath();
-        ctx.arc(this.position.x, this.position.y, this.boundingRadius, 0, Math.PI * 2, false);
+        ctx.arc(this.position.x, this.position.y, 12, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.rect(this.position.x - this.box.x/2, this.position.y - this.box.y, this.box.x, this.box.y);
-        ctx.fill();*/
+        ctx.moveTo(this.position.x - 18, this.position.y);
+        ctx.lineTo(this.position.x + 18, this.position.y);
+        ctx.moveTo(this.position.x, this.position.y - 18);
+        ctx.lineTo(this.position.x, this.position.y + 18);
+        ctx.stroke();
 
-        //this.weapon.Draw(animFrame, ctx);
+        ctx.restore();
 
     }
 

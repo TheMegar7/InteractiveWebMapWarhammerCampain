@@ -1,6 +1,6 @@
 
 class Camera {
-    ///Este escrip de camara esta echa para una situación en la que solo se navega en horizontal, pero hay que expandirla para una navegación vertical.
+    
     constructor(target) {
         this.target = target;
         
