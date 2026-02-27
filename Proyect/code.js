@@ -164,7 +164,13 @@ function Draw() {
     
     camera.PreDraw(ctx); //De aqui pabajo todo lo que pase en escena //////////////////////////////////////////////////////////
     
+    DrawMap(ctx);
+
+    //maya debug
+    ctx.save();
+    ctx.globalAlpha = 0.25;
     background.Draw(ctx);
+    ctx.restore();
     
     
     user.Draw(ctx);
@@ -178,6 +184,16 @@ function Draw() {
     // draw the fps
     DrawStats(ctx)
 }
+
+function DrawMap(ctx) {
+    const img = assets.map?.img;
+
+    // Si no ha cargado todavía, no lo intentes pintar
+    if (!img || !img.complete || img.naturalWidth === 0) return;
+
+    ctx.drawImage(img, 0, 0);
+}
+
 
 function DrawStats(ctx) {
     ctx.textAlign = "start";

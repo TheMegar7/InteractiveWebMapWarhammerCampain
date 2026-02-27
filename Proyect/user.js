@@ -15,7 +15,7 @@ class User {
         this.gnocchi = 0;
 
         //stats la mitad no se utilizan por que vienen de reciclar una clase llamada player
-        this.speed = 200;
+        this.speed = 600;
         this.speedMult = 1.5;
         this.movement = {
             movementX : 0,

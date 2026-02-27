@@ -5,6 +5,15 @@ class Camera {
         this.target = target;
         
         this.smoothingSpeed = 5;
+        
+        this.minX = 0;
+        this.minY = 0;
+        this.maxX = 0;
+        this.maxY = 0;
+
+        this.zoom = 1;
+        this.minZoom = 0.30;
+        this.maxZoom = 1.00;
 
         // shake no se va a usar de momento
         this.shakingValue = Vector2.Zero();
@@ -17,15 +26,14 @@ class Camera {
         this.cleanPos = Vector2.Zero();
         this.targetPosition = Vector2.Zero();
 
-        this.minX = 0;
-        this.minY = 0;
-        this.maxX = 0;
-        this.maxY = 0;
     }
 
     UpdateBounds() {
-        this.maxX = Math.max(0, sceneLimits.width - canvas.width);
-        this.maxY = Math.max(0, sceneLimits.height - canvas.height);
+        const viewW = canvas.width / this.zoom;
+        const viewH = canvas.height / this.zoom;
+
+        this.maxX = Math.max(0, sceneLimits.width - viewW);
+        this.maxY = Math.max(0, sceneLimits.height - viewH);
     }
     
 
@@ -44,15 +52,37 @@ class Camera {
         this.cleanPos.y = this.position.y;
     }
 
-    OnResize() {
-        this.UpdateBounds();
-
+    Clamp() {
         if (this.position.x < this.minX) this.position.x = this.minX;
         if (this.position.x > this.maxX) this.position.x = this.maxX;
         if (this.position.y < this.minY) this.position.y = this.minY;
         if (this.position.y > this.maxY) this.position.y = this.maxY;
     }
 
+    OnResize() {
+        this.UpdateBounds();
+
+        this.Clamp()
+    }
+
+    SetZoom(newZoom, screenX, screenY) {
+        const oldZoom = this.zoom;
+
+        // punto del mundo bajo el cursor antes del cambio
+        const worldX = this.position.x + screenX / oldZoom;
+        const worldY = this.position.y + screenY / oldZoom;
+
+        this.zoom = newZoom;
+
+        this.UpdateBounds();
+
+        // mantiene el mismo world point bajo el cursor
+        this.position.x = worldX - screenX / newZoom;
+        this.position.y = worldY - screenY / newZoom;
+
+        this.Clamp();
+    }
+    
     Update(deltaTime) {
         this.UpdateBounds();
 
@@ -85,7 +115,14 @@ class Camera {
     PreDraw(ctx) {
         ctx.save();
 
-        ctx.translate(-this.position.x, -this.position.y);
+        ctx.setTransform(
+            this.zoom, 0,
+            0, this.zoom,
+            -this.position.x * this.zoom,
+            -this.position.y * this.zoom
+        )
+        //Esto lo usaba antes del zoom pero lo guardo por si el zoom explota
+        //ctx.translate(-this.position.x, -this.position.y);
     }
 
     PostDraw(ctx) {

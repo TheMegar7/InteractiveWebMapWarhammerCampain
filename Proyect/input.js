@@ -1,5 +1,7 @@
 // key events
 var lastPress = null;
+const ZOOM_LEVELS = [1.0, 0.75, 0.5];
+let zoomIndex = 0; // empieza en 1.0
 
 const KEY_LEFT   = 37, KEY_A = 65;
 const KEY_UP     = 38, KEY_W = 87;
@@ -107,6 +109,27 @@ function SetupMouseEvents ()
     canvas.addEventListener("mousemove", MouseMove, false);
     // mouse up event
     canvas.addEventListener("mouseup", MouseUp, false);
+    // Wheel scroll
+    canvas.addEventListener("wheel", (e) => {
+        e.preventDefault();
+
+        if (!camera) return;
+
+        // mouse en coords de canvas (por si no hubo mousemove antes)
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+
+        // opcional: mantener Input.mouse actualizado
+        Input.mouse.x = mx;
+        Input.mouse.y = my;
+
+        // rueda abajo => zoom out, rueda arriba => zoom in
+        if (e.deltaY > 0) zoomIndex = Math.min(ZOOM_LEVELS.length - 1, zoomIndex + 1);
+        else             zoomIndex = Math.max(0, zoomIndex - 1);
+
+        camera.SetZoom(ZOOM_LEVELS[zoomIndex], mx, my);
+    }, { passive: false });
 }
 
 function MouseDown (event)
