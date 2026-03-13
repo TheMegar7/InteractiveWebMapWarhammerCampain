@@ -15,7 +15,7 @@ class User {
         this.gnocchi = 0;
 
         //stats la mitad no se utilizan por que vienen de reciclar una clase llamada player
-        this.speed = 600;
+        this.speed = 100;
         this.speedMult = 1.5;
         this.movement = {
             movementX : 0,
@@ -81,10 +81,10 @@ class User {
 
         ctx.save();
 
-        ctx.fillStyle = "crimson";
+        /*ctx.fillStyle = "crimson";
         ctx.beginPath();
         ctx.arc(this.position.x, this.position.y, 12, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fill();*/
 
         ctx.strokeStyle = "white";
         ctx.lineWidth = 2;

@@ -1,6 +1,6 @@
 // key events
 var lastPress = null;
-const ZOOM_LEVELS = [1.0, 0.75, 0.5];
+const ZOOM_LEVELS = [1.0, 0.75, 0.5, 0.3];
 let zoomIndex = 0; // empieza en 1.0
 
 const KEY_LEFT   = 37, KEY_A = 65;
@@ -10,6 +10,7 @@ const KEY_DOWN   = 40, KEY_S = 83;
 const KEY_PAUSE  = 19; KEY_Q = 81;
 const KEY_SPACE  = 32; KEY_E = 69;
 const KEY_ESCAPE = 27; KEY_F = 70;
+const KEY_ENTER  = 13;
 const KEY_LSHIFT = 16;
 const KEY_LCTRL  = 17;
 
@@ -130,8 +131,8 @@ function SetupMouseEvents ()
 
         camera.SetZoom(ZOOM_LEVELS[zoomIndex], mx, my);
     }, { passive: false });
-}
 
+}
 function MouseDown (event)
 {
     //let rect = canvas.getBoundingClientRect();
@@ -163,3 +164,5 @@ function MouseMove (event)
     Input.mouse.y = event.clientY - rect.top;
     //console.log(Input.mouse);
 }
+
+

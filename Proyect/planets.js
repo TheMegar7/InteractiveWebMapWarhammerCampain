@@ -1,0 +1,15 @@
+const PLANETS = {
+  1: { name: "Noralus", infra: 3, links: [2,3,4] },
+  2: { name: "Karabas", infra: 4, links: [1,3] },
+  3: { name: "Kryndaer", infra: 2, links: [1,2,5] },
+  4: { name: "Masnet", infra: 2, links: [1,6,7] },
+  5: { name: "Caltus Noven", infra: 3, links: [3,8,9,10] },
+  6: { name: "Felgris Secundus", infra: 3, links: [4,7] },
+  7: { name: "Tarkad Vindix", infra: 3, links: [4,6,11,12] },
+  8: { name: "Marvinius", infra: 3, links: [5,9] },
+  9: { name: "Vilkus Decima", infra: 2, links: [5,8] },
+  10:{ name: "Ikaron Prime", infra: 3, links: [5,11,12] },
+  11:{ name: "Novamagnor", infra: 2, links: [7,10,13] },
+  12:{ name: "Yawardet", infra: 2, links: [7,10,13] },
+  13:{ name: "Astarthem", infra: 4, links: [11,12] },
+};

@@ -21,6 +21,16 @@ var sceneLimits = {
 };
 var selectedToken = null;
 
+//// Debug and working tools (not for the user)
+
+var measure = {
+  enabled: true,
+  pointA: null,
+  pointB: null,
+  center: null,
+  radiusPoint: null
+};
+
 
 //Assets
 var assets = {
@@ -147,6 +157,9 @@ function Update(deltaTime) {
     
     //Update the User
     user.Update(deltaTime);
+    
+    if (measure.enabled){Measure()};
+
     // update the camera
     camera.Update(deltaTime);
 
@@ -194,7 +207,6 @@ function DrawMap(ctx) {
     ctx.drawImage(img, 0, 0);
 }
 
-
 function DrawStats(ctx) {
     ctx.textAlign = "start";
     ctx.fillStyle = "rgba(122, 122, 122, 0.5)";
@@ -206,7 +218,63 @@ function DrawStats(ctx) {
     ctx.fillText("FPS: " + fps, 6, 14);
     ctx.fillText("FPS (dt): " + (1 / globalDT).toFixed(2), 6, 32);
     ctx.fillText("deltaTime: " + (globalDT).toFixed(4), 6, 50);
+
+    //Debug
+    ctx.fillStyle = "white";
+    ctx.font = "16px Arial";
+
+    const wx = user.position.x.toFixed(1);
+    const wy = user.position.y.toFixed(1);
+
+    ctx.fillText(`World: x=${wx} y=${wy}`, 20, 80);
 }
+
+function Measure(){
+
+    if (Input.IsKeyDown(KEY_1)) { // guardar A
+        measure.pointA = { x: user.position.x, y: user.position.y };
+        console.log("A =", measure.pointA);
+    }
+
+    if (Input.IsKeyDown(KEY_2)) { // guardar B
+        measure.pointB = { x: user.position.x, y: user.position.y };
+        console.log("B =", measure.pointB);
+    }
+        
+    if (Input.IsKeyDown(KEY_3)) { // centro
+        measure.center = { x: user.position.x, y: user.position.y };
+        console.log("C =", measure.center);
+    }
+
+    if (Input.IsKeyDown(KEY_4)) { // radio
+        measure.radiusPoint = { x: user.position.x, y: user.position.y };
+        console.log("R =", measure.radiusPoint);
+    }
+
+    if (Input.IsKeyDown(KEY_ENTER) && measure.pointA && measure.pointB) {
+        const A = measure.pointA;
+        const B = measure.pointB;
+
+        const x = Math.min(A.x, B.x);
+        const y = Math.min(A.y, B.y);
+        const w = Math.abs(A.x - B.x);
+        const h = Math.abs(A.y - B.y);
+
+        console.log(`RECT = { x:${x.toFixed(1)}, y:${y.toFixed(1)}, w:${w.toFixed(1)}, h:${h.toFixed(1)} }`);
+    }
+        
+    if (Input.IsKeyDown(KEY_ENTER) && measure.center && measure.radiusPoint) {
+        const C = measure.center;
+        const R = measure.radiusPoint;
+
+        const dx = R.x - C.x;
+        const dy = R.y - C.y;
+        const r = Math.sqrt(dx*dx + dy*dy);
+
+        console.log(`CIRCLE = { cx:${C.x.toFixed(1)}, cy:${C.y.toFixed(1)}, r:${r.toFixed(1)} }`);
+    }
+}
+
 
 function DrawCursor() {
     if (assets.mouse?.img) {
@@ -233,6 +301,13 @@ function StartAudio() {
             console.log("Audio bloqueado o no disponible:", error);
         });
     }
+}
+
+function ScreenToWorld(screenX, screenY) {
+  return {
+    x: camera.position.x + screenX / camera.zoom,
+    y: camera.position.y + screenY / camera.zoom
+  };
 }
 
 
