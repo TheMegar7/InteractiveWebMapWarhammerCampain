@@ -6,6 +6,8 @@ class User {
 
         this.position = initialPosition;
         this.boundingRadius = 0;
+
+        //Animation variables
         //this.attacking = false;
         this.moving = false;
         this.lastFrameMoving = false;
@@ -14,18 +16,44 @@ class User {
         this.framesCount = 0;
         this.gnocchi = 0;
 
-        //stats la mitad no se utilizan por que vienen de reciclar una clase llamada player
         this.speed = 100;
         this.speedMult = 1.5;
         this.movement = {
             movementX : 0,
             movementY : 0
         }
-        
+        this.dragControlActive = false;
+    }
+
+    ApplyDragPan(screenDx, screenDy, zoom) {
+        // arrastrar el mapa: el "focus" se mueve en sentido contrario al ratón
+        this.position.x -= screenDx / zoom;
+        this.position.y -= screenDy / zoom;
+
+        this.ClampToScene();
+    }
+
+    ClampToScene() {
+        if (this.position.x < sceneLimits.x + this.boundingRadius)
+            this.position.x = sceneLimits.x + this.boundingRadius;
+        if (this.position.x > sceneLimits.x + sceneLimits.width - this.boundingRadius)
+            this.position.x = sceneLimits.x + sceneLimits.width - this.boundingRadius;
+
+        if (this.position.y < sceneLimits.y + this.boundingRadius)
+            this.position.y = sceneLimits.y + this.boundingRadius;
+        if (this.position.y > sceneLimits.y + sceneLimits.height - this.boundingRadius)
+            this.position.y = sceneLimits.y + sceneLimits.height - this.boundingRadius;
     }
 
     Update(deltaTime) {
         this.framesCount++;
+
+        //no WASD while drag
+        if (this.dragControlActive) {
+        this.moving = false;
+        this.lastFrameMoving = false;
+        return;
+        }
 
         // movement
         this.movement.movementX = 0;
@@ -50,31 +78,14 @@ class User {
         }
 
 
-        if(this.movement.movementX != 0){
-            this.moving = true;
-            
-        }
-        else{
-            this.moving = false;
-        }
-        
+        this.moving = (this.movement.movementX !== 0 || this.movement.movementY !== 0);
         this.lastFrameMoving = this.moving;
 
         // apply the movement
         this.position.x += this.movement.movementX * this.speed * deltaTime;
         this.position.y += this.movement.movementY * this.speed * deltaTime;
         
-
-        
-        if (this.position.x < sceneLimits.x + this.boundingRadius)
-            this.position.x = sceneLimits.x + this.boundingRadius;
-        if (this.position.x > sceneLimits.x + sceneLimits.width - this.boundingRadius)
-            this.position.x = sceneLimits.x + sceneLimits.width - this.boundingRadius;
-        if (this.position.y < sceneLimits.y + this.boundingRadius)
-            this.position.y = sceneLimits.y + this.boundingRadius;
-        if (this.position.y > sceneLimits.y + sceneLimits.height - this.boundingRadius)
-            this.position.y = sceneLimits.y + sceneLimits.height - this.boundingRadius;
-        
+        this.ClampToScene();
     }
 
     Draw(ctx) {

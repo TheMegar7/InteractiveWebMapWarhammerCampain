@@ -1,8 +1,4 @@
 // key events
-var lastPress = null;
-const ZOOM_LEVELS = [1.0, 0.75, 0.5, 0.3];
-let zoomIndex = 0; // empieza en 1.0
-
 const KEY_LEFT   = 37, KEY_A = 65;
 const KEY_UP     = 38, KEY_W = 87;
 const KEY_RIGHT  = 39, KEY_D = 68;
@@ -24,14 +20,30 @@ const KEY_6 = 54;
 const KEY_7 = 55;
 const KEY_8 = 56;
 const KEY_9 = 57;
+//
+
+var lastPress = null;
+const ZOOM_LEVELS = [1.0, 0.75, 0.5, 0.3];
+let zoomIndex = 0; // empieza en 1.0
+
+let drag = {
+  isDown: false,
+  isDragging: false,
+  startX: 0,
+  startY: 0,
+  lastX: 0,
+  lastY: 0,
+  threshold: 5 // píxeles de pantalla
+};
 
 var Input = {
     mouse: {
-        x: 0,
-        y: 0,
+        x: 0, y: 0,
+        dx: 0, dy: 0,
         down: false,
         up: false,
-        pressed: false
+        pressed: false,
+        wheelDelta: 0
     },
 
     keyboard: {
@@ -71,9 +83,11 @@ var Input = {
             }
         }
 
-        // clean mose down events
+        // clean mouse down events
         this.mouse.down = false;
         this.mouse.up = false;
+        this.mouse.dx = 0;
+        this.mouse.dy = 0;
     }
 };
 
@@ -109,9 +123,12 @@ function SetupMouseEvents ()
     // mouse move event
     canvas.addEventListener("mousemove", MouseMove, false);
     // mouse up event
-    canvas.addEventListener("mouseup", MouseUp, false);
+    window.addEventListener("mouseup", MouseUp, false);
+    // Extra safety measure in case the window loses focus
+    window.addEventListener("blur", ForceMouseRelease, false);
     // Wheel scroll
-    canvas.addEventListener("wheel", (e) => {
+    canvas.addEventListener("wheel", MouseWheel, { passive: false });
+    /*canvas.addEventListener("wheel", (e) => {
         e.preventDefault();
 
         if (!camera) return;
@@ -130,39 +147,77 @@ function SetupMouseEvents ()
         else             zoomIndex = Math.max(0, zoomIndex - 1);
 
         camera.SetZoom(ZOOM_LEVELS[zoomIndex], mx, my);
-    }, { passive: false });
+    }, { passive: false });*/
 
 }
-function MouseDown (event)
-{
-    //let rect = canvas.getBoundingClientRect();
-    //let clickX = event.clientX - rect.left;
-    //let clickY = event.clientY - rect.top;
 
-    Input.mouse.down = true;
-    Input.mouse.pressed = true;
+function MouseDown(event) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = event.clientX - rect.left;
+  const sy = event.clientY - rect.top;
 
-    //console.log("MouseDown: " + "X=" + clickX + ", Y=" + clickY);
+  Input.mouse.down = true;
+  Input.mouse.pressed = true;
+  Input.mouse.x = sx;
+  Input.mouse.y = sy;
 }
 
-function MouseUp (event)
-{
-    //let rect = canvas.getBoundingClientRect();
-    //let clickX = event.clientX - rect.left;
-    //let clickY = event.clientY - rect.top;
+function MouseMove(event) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = event.clientX - rect.left;
+  const sy = event.clientY - rect.top;
 
-    Input.mouse.up = true;
-    Input.mouse.pressed = false;
+  // si no existen, inicializa
+  if (typeof Input.mouse.dx !== "number") Input.mouse.dx = 0;
+  if (typeof Input.mouse.dy !== "number") Input.mouse.dy = 0;
 
-    //console.log("MouseUp: " + "X=" + clickX + ", Y=" + clickY);
+  const dx = sx - Input.mouse.x;
+  const dy = sy - Input.mouse.y;
+
+  Input.mouse.dx += dx;
+  Input.mouse.dy += dy;
+
+  Input.mouse.x = sx;
+  Input.mouse.y = sy;
 }
 
-function MouseMove (event)
-{
-    let rect = canvas.getBoundingClientRect();
-    Input.mouse.x = event.clientX - rect.left;
-    Input.mouse.y = event.clientY - rect.top;
-    //console.log(Input.mouse);
+function MouseUp(event) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = event.clientX - rect.left;
+  const sy = event.clientY - rect.top;
+
+  Input.mouse.up = true;
+  Input.mouse.pressed = false;
+  Input.mouse.x = sx;
+  Input.mouse.y = sy;
 }
 
+function ForceMouseRelease() {
+  Input.mouse.pressed = false;
+  Input.mouse.up = true;
+  dragState.isDragging = false;
+  user.dragControlActive = false;
+}
+
+
+function MouseWheel(event){
+    event.preventDefault();
+
+    if (!camera) return;
+
+    // mouse en coords de canvas (por si no hubo mousemove antes)
+    const rect = canvas.getBoundingClientRect();
+    const mx = event.clientX - rect.left;
+    const my = event.clientY - rect.top;
+
+    // opcional: mantener Input.mouse actualizado
+    Input.mouse.x = mx;
+    Input.mouse.y = my;
+
+    // rueda abajo => zoom out, rueda arriba => zoom in
+    if (event.deltaY > 0) zoomIndex = Math.min(ZOOM_LEVELS.length - 1, zoomIndex + 1);
+    else             zoomIndex = Math.max(0, zoomIndex - 1);
+
+    camera.SetZoom(ZOOM_LEVELS[zoomIndex], mx, my);
+}
 

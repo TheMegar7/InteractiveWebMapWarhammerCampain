@@ -21,6 +21,8 @@ var sceneLimits = {
 };
 var selectedToken = null;
 
+var cameraDragActive = false;//Not Used yet?
+
 //// Debug and working tools (not for the user)
 
 var measure = {
@@ -116,6 +118,7 @@ function Start() {
     window.addEventListener("pointerdown", TryStartAudio, { once: true });
     window.addEventListener("keydown", TryStartAudio, { once: true });
 
+    BuildAllPLRects();
     
     // initialize the player //Aqui tengo que meter la ubicación de inicio del player y la imagen (?) del player.
     user = new User(new Vector2(canvas.width / 2, canvas.height / 2));
@@ -154,11 +157,15 @@ function Loop() {
 
 
 function Update(deltaTime) {
+    //interpretaciones de inputs
+    UpdateInteraction();
     
     //Update the User
     user.Update(deltaTime);
     
+    ///DevOnly
     if (measure.enabled){Measure()};
+    ///
 
     // update the camera
     camera.Update(deltaTime);
@@ -185,7 +192,12 @@ function Draw() {
     background.Draw(ctx);
     ctx.restore();
     
+    for (const idStr in HITBOXES) {
+    if (!HITBOXES.hasOwnProperty(idStr)) continue;
+    DebugDrawPLRects(ctx, parseInt(idStr, 10));
+    }
     
+
     user.Draw(ctx);
 
     camera.PostDraw(ctx); //De aqui parriba todo lo que pase en escena //////////////////////////////////////////////////////////
@@ -229,52 +241,6 @@ function DrawStats(ctx) {
     ctx.fillText(`World: x=${wx} y=${wy}`, 20, 80);
 }
 
-function Measure(){
-
-    if (Input.IsKeyDown(KEY_1)) { // guardar A
-        measure.pointA = { x: user.position.x, y: user.position.y };
-        console.log("A =", measure.pointA);
-    }
-
-    if (Input.IsKeyDown(KEY_2)) { // guardar B
-        measure.pointB = { x: user.position.x, y: user.position.y };
-        console.log("B =", measure.pointB);
-    }
-        
-    if (Input.IsKeyDown(KEY_3)) { // centro
-        measure.center = { x: user.position.x, y: user.position.y };
-        console.log("C =", measure.center);
-    }
-
-    if (Input.IsKeyDown(KEY_4)) { // radio
-        measure.radiusPoint = { x: user.position.x, y: user.position.y };
-        console.log("R =", measure.radiusPoint);
-    }
-
-    if (Input.IsKeyDown(KEY_ENTER) && measure.pointA && measure.pointB) {
-        const A = measure.pointA;
-        const B = measure.pointB;
-
-        const x = Math.min(A.x, B.x);
-        const y = Math.min(A.y, B.y);
-        const w = Math.abs(A.x - B.x);
-        const h = Math.abs(A.y - B.y);
-
-        console.log(`RECT = { x:${x.toFixed(1)}, y:${y.toFixed(1)}, w:${w.toFixed(1)}, h:${h.toFixed(1)} }`);
-    }
-        
-    if (Input.IsKeyDown(KEY_ENTER) && measure.center && measure.radiusPoint) {
-        const C = measure.center;
-        const R = measure.radiusPoint;
-
-        const dx = R.x - C.x;
-        const dy = R.y - C.y;
-        const r = Math.sqrt(dx*dx + dy*dy);
-
-        console.log(`CIRCLE = { cx:${C.x.toFixed(1)}, cy:${C.y.toFixed(1)}, r:${r.toFixed(1)} }`);
-    }
-}
-
 
 function DrawCursor() {
     if (assets.mouse?.img) {
@@ -284,32 +250,125 @@ function DrawCursor() {
         ctx.fillStyle = "rgb(255, 0, 0)";
         ctx.fillRect(Input.mouse.x, Input.mouse.y, 4, 4);
     }
-
+    
     /*if (selectedToken && selectedToken.img) {
         ctx.drawImage(selectedToken.img, Input.mouse.x + 12, Input.mouse.y + 12, 32, 32);
-    }*/
+        }*/
 }
-
+    
 function StartAudio() {
-    if (!audios.soundtrack) return;
-
-    audios.soundtrack.volume = 0.2;
-
-    const playPromise = audios.soundtrack.play();
-    if (playPromise !== undefined) {
-        playPromise.catch((error) => {
-            console.log("Audio bloqueado o no disponible:", error);
-        });
-    }
+        if (!audios.soundtrack) return;
+        
+        audios.soundtrack.volume = 0.2;
+        
+        const playPromise = audios.soundtrack.play();
+        if (playPromise !== undefined) {
+            playPromise.catch((error) => {
+                console.log("Audio bloqueado o no disponible:", error);
+            });
+        }
 }
-
+    
 function ScreenToWorld(screenX, screenY) {
-  return {
-    x: camera.position.x + screenX / camera.zoom,
-    y: camera.position.y + screenY / camera.zoom
-  };
+        return {
+            x: camera.position.x + screenX / camera.zoom,
+            y: camera.position.y + screenY / camera.zoom
+        };
+}
+    
+function Measure(){
+    
+        if (Input.IsKeyDown(KEY_1)) { // guardar A
+            measure.pointA = { x: user.position.x, y: user.position.y };
+            console.log("A =", measure.pointA);
+        }
+    
+        if (Input.IsKeyDown(KEY_2)) { // guardar B
+            measure.pointB = { x: user.position.x, y: user.position.y };
+            console.log("B =", measure.pointB);
+        }
+            
+        if (Input.IsKeyDown(KEY_3)) { // centro
+            measure.center = { x: user.position.x, y: user.position.y };
+            console.log("C =", measure.center);
+        }
+    
+        if (Input.IsKeyDown(KEY_4)) { // radio
+            measure.radiusPoint = { x: user.position.x, y: user.position.y };
+            console.log("R =", measure.radiusPoint);
+        }
+    
+        if (Input.IsKeyDown(KEY_ENTER) && measure.pointA && measure.pointB) {
+            const A = measure.pointA;
+            const B = measure.pointB;
+    
+            const x = Math.min(A.x, B.x);
+            const y = Math.min(A.y, B.y);
+            const w = Math.abs(A.x - B.x);
+            const h = Math.abs(A.y - B.y);
+    
+            console.log(`RECT = { x:${x.toFixed(1)}, y:${y.toFixed(1)}, w:${w.toFixed(1)}, h:${h.toFixed(1)} }`);
+        }
+            
+        if (Input.IsKeyDown(KEY_ENTER) && measure.center && measure.radiusPoint) {
+            const C = measure.center;
+            const R = measure.radiusPoint;
+    
+            const dx = R.x - C.x;
+            const dy = R.y - C.y;
+            const r = Math.sqrt(dx*dx + dy*dy);
+    
+            console.log(`CIRCLE = { cx:${C.x.toFixed(1)}, cy:${C.y.toFixed(1)}, r:${r.toFixed(1)} }`);
+        }
 }
 
+function BuildPLRectsForPlanet(planetId) {
+  const hb = HITBOXES[planetId];
+  if (!hb || !hb.plGrid) return;
 
+  // mezcla template + origin (sin spread)
+  const g = Object.assign({}, PL_GRID_TEMPLATE, hb.plGrid);
 
+  const rects = [];
+  const stepX = g.cellW + g.gapX;
+  const stepY = g.cellH + g.gapY;
+
+  for (let row = 0; row < g.rows; row++) {
+    for (let col = 0; col < g.cols; col++) {
+      rects.push({
+        col, row,
+        x: g.originX + col * stepX,
+        y: g.originY + row * stepY,
+        w: g.cellW,
+        h: g.cellH
+      });
+    }
+  }
+
+  hb.plGridFull = g;
+  hb.plRects = rects;
+}
+
+function BuildAllPLRects() {
+  for (const idStr in HITBOXES) {
+    BuildPLRectsForPlanet(parseInt(idStr, 10));
+  }
+}
+
+function DebugDrawPLRects(ctx, planetId) {
+  const hb = HITBOXES[planetId];
+  if (!hb || !hb.plRects) return;
+
+  ctx.save();
+  ctx.strokeStyle = "yellow";
+  ctx.lineWidth = 2;
+
+  for (let i = 0; i < hb.plRects.length; i++) {
+    const r = hb.plRects[i];
+    ctx.strokeRect(r.x, r.y, r.w, r.h);
+  }
+
+  ctx.restore();
+}
+    
 window.onload = Init;

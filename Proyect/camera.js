@@ -110,6 +110,15 @@ class Camera {
 
         this.position.x += ((this.targetPosition.x - this.position.x) * smoothStep) + this.shakingValue.x;
         this.position.y += ((this.targetPosition.y - this.position.y) * smoothStep) + this.shakingValue.y;
+
+        if (this.target.dragControlActive) {
+            // follow instantáneo durante drag
+            this.position.x = this.targetPosition.x;
+            this.position.y = this.targetPosition.y;
+            this.cleanPos.x = this.position.x;
+            this.cleanPos.y = this.position.y;
+            return;
+        }
     }
 
     PreDraw(ctx) {
